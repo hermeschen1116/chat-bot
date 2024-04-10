@@ -4,6 +4,10 @@
 ### HOW-TO
 執行 `run_generate_response.ipynb`
 
+### Progress
+* wandb is working.
+* the whole thing seemed to be working.
+
 ### ISSUES
 1. **OOM on 3090**
     
@@ -12,6 +16,10 @@
 2. **資料集建立**
    
     利用 chatGPT 來建立。回應以 text generation 的模式生成，一次一個回應情緒。
+
+3. **top_k_top_p_filtering import error**
+
+    把 transformers 降低版本到 4.38.2
 
 ### CONTRIBUTION ?
 
