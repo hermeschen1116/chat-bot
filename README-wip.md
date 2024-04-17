@@ -2,14 +2,20 @@
 中央大學專題
 
 ### HOW-TO
-執行 `run_generate_response_working.ipynb`
+執行 `run_generate_response_finetuning.ipynb`
 
 ### Progress
 * wandb is working.
-* the whole thing seemed to be working.
-* 改用 "meta-llama/Llama-2-7b-chat-hf"
+* the whole thing seemed to be working. lol
+* base model changed to "meta-llama/Llama-2-7b-chat-hf"
 * flash_attention_2
-* 目前訓練大概占用 11G vram
+* takes roughly 11G vram
+* use openAI API to generate dataset and trained on it
+* downgraded to transformers v4.38.2
+
+### To-Do
+* apply_chat_template
+* more data (only one emotion now)
 
 ### ISSUES
 1. **OOM on 3090**
@@ -28,6 +34,10 @@
     [ref](https://github.com/huggingface/trl/issues/1409#issuecomment-1986880442)
 
     不過用舊版的疑似會對新套件有支援性問題，目前沒碰上
+
+4. **Need a faster way to generate training data**
+
+    現在用 chatGPT 4.0 跑，目前只跑其中一種情緒的一百筆，還有七種要跑。
 
 ### CONTRIBUTION ?
 
