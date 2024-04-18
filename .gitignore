@@ -177,11 +177,10 @@ pyrightconfig.json
 
 **/**/checkpoints*/
 **/**/*_on_daily_dialog*/
-**/sentiment_analysis/emotion_text_classifier_on_dd_v1/
-**/llama-2-7b-testing/
-**/results_modified/
-**/archived/
-**/sweeps/
+bot/sentiment_analysis/emotion_text_classifier_on_dd_v1/
+bot/candidate_generation/llama-2-7b-testing/
+bot/candidate_generation/results_modified/
+bot/candidate_generation/archived/
 **/**/*.sh
 **/**/wandb/
 **/**/artifacts/

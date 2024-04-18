@@ -1,10 +1,14 @@
 # 專題
 中央大學專題
 
-### HOW-TO
-執行 `run_generate_response_finetuning.ipynb`
+# Usage
 
-### Progress
+訓練執行 `run_generate_response_finetuning.ipynb`
+
+拉資料執行 `test_on_data.ipynb`
+
+# Progress
+
 * wandb is working.
 * the whole thing seemed to be working. lol
 * base model changed to "meta-llama/Llama-2-7b-chat-hf"
@@ -12,12 +16,14 @@
 * takes roughly 11G vram
 * use openAI API to generate dataset and trained on it
 * downgraded to transformers v4.38.2
+  
+# To-Do
 
-### To-Do
 * apply_chat_template
 * more data (only one emotion now)
 
-### ISSUES
+# ISSUES
+
 1. **OOM on 3090**
     
     add [gradient_checkpointing](https://huggingface.co/docs/transformers/v4.20.1/en/perf_train_gpu_one#using-accelerate)
@@ -39,36 +45,9 @@
 
     現在用 chatGPT 4.0 跑，目前只跑其中一種情緒的一百筆，還有七種要跑。
 
-### CONTRIBUTION ?
+# To-Do
 
-
-#### 整體流程
-
-
-
-### To-Do
 - [ ] changing datasets
 - [ ] test performance
 - [ ] ...
----
-### 專題作業時程
-#### Sentiment Analysis （3月初）
-* Test prompt and optimize 
-#### Response Generator （3月底）
-* Test prompt and optimize
-#### Candidate Generator （4月中）
-* Test prompt
-* Test different length of history
-* Optimize 
-* (option) use Trl to strengthen divergence 
-#### Similarity Analysis （3月底）
-* Find right math formula
-* Experiment 
-#### Emotion Model （4月底）
-* Understand different types of attention mechanism 
-* Build model with attention mechanism 
-* Optimize
-#### Full Model（5月中）
-* Optimize and Improve 
-* Application
 
