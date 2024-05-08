@@ -9,16 +9,16 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification, Trai
 from huggingface_hub import login
 
 login(token=os.environ.get("HF_TOKEN", ""), add_to_git_credential=True)
-wandb.login(key=os.environ.get("WANDB_API_KEY", ""), relogin=True)
+wandb.login(key=os.environ.get("WANDB_API_KEY", ""))
 
 wandb_config = {
-    "base_model": "llama-2-chat-7b",
+    "base_model": "michellejieli/emotion_text_classifier",
 }
 wandb.init(
     job_type="fine-tuning",
     config=wandb_config,
     project="emotion-chat-bot-ncu",
-    group="candidate_generation",
+    group="emotion_predictor",
     mode="online",
     resume="auto"
 )
@@ -32,13 +32,6 @@ def preprocessing(data):
     data = data.remove_columns(["dialog_id", "turn_type"])
     return data
 
-def shifting_test(data):
-    df = data.to_pandas()
-    df["label"] = df["label"].shift(-1).fillna(0).astype(int)
-    modified_dataset = Dataset.from_pandas(df)
-    data = modified_dataset
-    return data
-
 def shifting_train(data):
     df = data["train"].to_pandas()
     df["label"] = df["label"].shift(-1).fillna(0).astype(int)
@@ -47,19 +40,23 @@ def shifting_train(data):
     return data
 
 data_name = "benjaminbeilharz/better_daily_dialog"
-data = load_dataset(data_name, num_proc=16)
-data = preprocessing(data)
+data_raw = load_dataset(data_name, num_proc=16)
+data_raw = preprocessing(data_raw)
+data_raw = shifting_train(data_raw)
+data = data_raw
 
 tokenizer = AutoTokenizer.from_pretrained(base_model)
 
 def tokenize(batch):
     return tokenizer(batch["text"], padding="max_length", truncation=True)
 
+emotions = data
+
 tokens2ids = list(zip(tokenizer.all_special_tokens, tokenizer.all_special_ids))
 data = sorted(tokens2ids, key=lambda x: x[-1])
 # df = pd.DataFrame(data, columns=["Special Token", "Special Token ID"])
 
-emotions_encoded = data.map(tokenize, batched=True, batch_size=None)
+emotions_encoded = emotions.map(tokenize, batched=True, batch_size=None)
 print(emotions_encoded["train"].column_names)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
