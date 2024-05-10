@@ -1,14 +1,12 @@
 import os
-import pandas as pd
 import torch
 import wandb
 from datasets import load_dataset, Dataset
-import pandas as pd
 from sklearn.metrics import f1_score, accuracy_score
-from transformers import AutoTokenizer, AutoModelForSequenceClassification, Trainer, TrainingArguments, pipeline
+from transformers import AutoTokenizer, AutoModelForSequenceClassification, Trainer, TrainingArguments
 from huggingface_hub import login
 
-login(token=os.environ.get("HF_TOKEN", ""), add_to_git_credential=True)
+# login(token=os.environ.get("HF_TOKEN", ""), add_to_git_credential=True)
 wandb.login(key=os.environ.get("WANDB_API_KEY", ""))
 
 wandb_config = {
