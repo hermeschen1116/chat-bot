@@ -1,18 +1,16 @@
 import os
 import pandas as pd
 import torch
+import wandb
 from datasets import load_dataset, Dataset
 import pandas as pd
 from sklearn.metrics import f1_score, accuracy_score
-from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
+from transformers import AutoTokenizer, AutoModelForSequenceClassification, Trainer, TrainingArguments, pipeline
 from huggingface_hub import login
-
-# login(token=os.environ.get("HF_TOKEN", ""), add_to_git_credential=True)
 
 new_model = "checkpoints"
 base_model = "michellejieli/emotion_text_classifier"
 tokenizer = AutoTokenizer.from_pretrained(base_model)
-
 
 def preprocessing(data):
     data = data.rename_column("utterance", "text")
@@ -50,9 +48,7 @@ label2id = {
     "surprise": 6
 }
 
-
 classifier_model = AutoModelForSequenceClassification.from_pretrained(new_model, num_labels=num_labels, id2label=id2label, label2id=label2id)
-
 classifier = pipeline("sentiment-analysis", model=classifier_model, tokenizer=tokenizer, device=0)
 data_name = "benjaminbeilharz/better_daily_dialog"
 data = load_dataset(data_name, split='test', num_proc=8)
