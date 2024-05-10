@@ -1,14 +1,11 @@
-import os
-import pandas as pd
 import torch
-import wandb
 from datasets import load_dataset, Dataset
 import pandas as pd
 from sklearn.metrics import f1_score, accuracy_score
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, Trainer, TrainingArguments, pipeline
 from huggingface_hub import login
 
-new_model = "checkpoints"
+new_model = "etc_on_dd"
 base_model = "michellejieli/emotion_text_classifier"
 tokenizer = AutoTokenizer.from_pretrained(base_model)
 
@@ -49,7 +46,7 @@ label2id = {
 }
 
 classifier_model = AutoModelForSequenceClassification.from_pretrained(new_model, num_labels=num_labels, id2label=id2label, label2id=label2id)
-classifier = pipeline("sentiment-analysis", model=classifier_model, tokenizer=tokenizer, device=0)
+classifier = pipeline("sentiment-analysis", model=classifier_model, tokenizer=tokenizer, batch_size=8, device=0)
 data_name = "benjaminbeilharz/better_daily_dialog"
 data = load_dataset(data_name, split='test', num_proc=8)
 data = preprocessing(data)
@@ -66,8 +63,31 @@ predictions = data.map(predict)
 true_labels = [p["true_label"] for p in predictions]
 predicted_labels = [p["predicted_label"] for p in predictions]
 
+f1_ft = f1_score(true_labels, predicted_labels, average='weighted')
+accuracy_ft = accuracy_score(true_labels, predicted_labels)
+
+classifier_model = AutoModelForSequenceClassification.from_pretrained(base_model, num_labels=num_labels, id2label=id2label, label2id=label2id)
+classifier = pipeline("sentiment-analysis", model=classifier_model, tokenizer=tokenizer, batch_size=8, device=0)
+
+def predict(row):
+    text = row['text']
+    true_label = row['label']
+    predicted_result = classifier(text)[0]
+    predicted_label = label2id[predicted_result["label"]]
+
+    return {"predicted_label": predicted_label, "true_label": true_label}
+predictions = data.map(predict)
+true_labels = [p["true_label"] for p in predictions]
+predicted_labels = [p["predicted_label"] for p in predictions]
+
 f1 = f1_score(true_labels, predicted_labels, average='weighted')
 accuracy = accuracy_score(true_labels, predicted_labels)
 
+
+print("Fine-tuned:")
+print("F1-score:", f1_ft, )
+print("Accuracy:", accuracy_ft)
+
+print("\nOriginal:")
 print("F1-score:", f1, )
 print("Accuracy:", accuracy)

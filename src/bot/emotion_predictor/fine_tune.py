@@ -15,14 +15,14 @@ wandb_config = {
 wandb.init(
     job_type="fine-tuning",
     config=wandb_config,
-    project="emotion-chat-bot-ncu",
-    group="emotion_predictor",
+    project="emotion-chat-bot-ncu-1",
+    group="emotion_predictor_ex1",
     mode="online",
-    resume="auto"
+    # resume="auto"
 )
 
 base_model = "michellejieli/emotion_text_classifier"
-new_model = "checkpoints"
+new_model = "etc_on_dd"
 
 def preprocessing(data):
     data = data.rename_column("utterance", "text")
@@ -117,7 +117,6 @@ training_args = TrainingArguments(
     log_level="error",
     overwrite_output_dir=True
 )
-
 wandb.config["trainer_arguments"] = training_args.to_dict()
 
 trainer = Trainer(model=model, args=training_args,
