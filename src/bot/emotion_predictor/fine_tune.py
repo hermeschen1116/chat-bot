@@ -6,7 +6,7 @@ from sklearn.metrics import f1_score, accuracy_score
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, Trainer, TrainingArguments
 from huggingface_hub import login
 
-# login(token=os.environ.get("HF_TOKEN", ""), add_to_git_credential=True)
+login(token=os.environ.get("HF_TOKEN", ""), add_to_git_credential=True)
 wandb.login(key=os.environ.get("WANDB_API_KEY", ""))
 
 wandb_config = {
@@ -15,7 +15,7 @@ wandb_config = {
 wandb.init(
     job_type="fine-tuning",
     config=wandb_config,
-    project="emotion-chat-bot-ncu-1",
+    project="emotion-chat-bot-ncu",
     group="emotion_predictor_ex1",
     mode="online",
     # resume="auto"
@@ -26,13 +26,13 @@ new_model = "etc_on_dd"
 
 def preprocessing(data):
     data = data.rename_column("utterance", "text")
-    data = data.rename_column("emotion", "label")
-    data = data.remove_columns(["dialog_id", "turn_type"])
+    data = data.rename_column("emotion", "label") 
+    data = data.remove_columns("turn_type")
     return data
 
 def shifting_train(data):
     df = data["train"].to_pandas()
-    df["label"] = df["label"].shift(-1).fillna(0).astype(int)
+    df["label"] = df.groupby('dialog_id')["label"].shift(-1).fillna(0).astype(int)
     modified_dataset = Dataset.from_pandas(df)
     data["train"] = modified_dataset
     return data
@@ -52,7 +52,6 @@ emotions = data
 
 tokens2ids = list(zip(tokenizer.all_special_tokens, tokenizer.all_special_ids))
 data = sorted(tokens2ids, key=lambda x: x[-1])
-# df = pd.DataFrame(data, columns=["Special Token", "Special Token ID"])
 
 emotions_encoded = emotions.map(tokenize, batched=True, batch_size=None)
 print(emotions_encoded["train"].column_names)
@@ -94,7 +93,7 @@ logging_steps = len(emotions_encoded["train"]) // batch_size
 
 training_args = TrainingArguments(
     output_dir=new_model,
-    num_train_epochs=2,
+    num_train_epochs=5,
     per_device_train_batch_size=batch_size,
     per_device_eval_batch_size=batch_size,
     gradient_accumulation_steps=1,
