@@ -4,7 +4,9 @@ import os
 from sklearn.metrics import f1_score, accuracy_score
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
 from huggingface_hub import login
+from dotenv import load_dotenv
 
+load_dotenv()
 login(token=os.environ.get("HF_TOKEN", ""), add_to_git_credential=True)
 
 new_model = "etc_on_dd"
