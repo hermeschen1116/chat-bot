@@ -181,6 +181,11 @@ bot/sentiment_analysis/emotion_text_classifier_on_dd_v1/
 **/**/llama-2-7b-testing/
 **/**/results_modified/
 **/**/archived/
+etc_on_dd/
 **/**/*.sh
 **/**/wandb/
+<<<<<<< HEAD
 **/**/artifacts/
+=======
+etc_on_dd/
+>>>>>>> 52d5289 (remove test)
