@@ -94,13 +94,13 @@ batch_size = 64
 logging_steps = len(emotions_encoded["train"]) // batch_size
 
 training_args = TrainingArguments(
-    output_dir=new_model,
+    output_dir="./checkpoints",
     num_train_epochs=5,
     per_device_train_batch_size=batch_size,
     per_device_eval_batch_size=batch_size,
     gradient_accumulation_steps=1,
     optim="paged_adamw_32bit",
-    save_steps=100,
+    save_steps=500,
     logging_steps=logging_steps,
     learning_rate=2e-5,
     weight_decay=0.01,
