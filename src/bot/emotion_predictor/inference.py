@@ -21,7 +21,9 @@ def preprocessing(data):
 
 def shifting_test(data):
     df = data.to_pandas()
-    df["label"] = df.groupby('dialog_id')["label"].shift(-1).fillna(0).astype(int)
+    df["label"] = df.groupby('dialog_id')["label"].shift(-1)
+    df.dropna(inplace = True)
+    df["label"]  = df["label"].astype(int)
     modified_dataset = Dataset.from_pandas(df)
     data = modified_dataset
     return data
