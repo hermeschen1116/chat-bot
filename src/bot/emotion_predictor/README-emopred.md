@@ -2,8 +2,11 @@
 中央大學專題
 
 ### HOW-TO
-執行 `run_EP.ipynb`
+`run_EP.ipynb` : 測試用筆記本，可略過
+`fine_tune.py` : 訓練用
+`inference.py` : 和未訓練模型比較 f1-score 和 acc
 
+---
 ### 結果 5 epoches
 
 ```
