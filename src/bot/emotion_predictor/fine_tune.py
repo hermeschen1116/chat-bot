@@ -32,19 +32,25 @@ def preprocessing(data):
     data = data.remove_columns("turn_type")
     return data
 
-def shifting_train(data):
-    df = data["train"].to_pandas()
+def shift_labels(dataset):
+    df = dataset.to_pandas()
     df["label"] = df.groupby('dialog_id')["label"].shift(-1)
     df.dropna(inplace = True)
     df["label"]  = df["label"].astype(int)
-    modified_dataset = Dataset.from_pandas(df)
-    data["train"] = modified_dataset
+    # print(df.head(20))
+    return dataset.from_pandas(df)
+
+def shift_all(data):
+    data["train"] = shift_labels(data["train"])
+    data["validation"] = shift_labels(data["validation"])
+    data["test"] = shift_labels(data["test"])
+    
     return data
 
 data_name = "benjaminbeilharz/better_daily_dialog"
 data_raw = load_dataset(data_name, num_proc=16)
 data_raw = preprocessing(data_raw)
-data_raw = shifting_train(data_raw)
+data_raw = shift_all(data_raw)
 data = data_raw
 
 tokenizer = AutoTokenizer.from_pretrained(base_model)
@@ -58,7 +64,7 @@ tokens2ids = list(zip(tokenizer.all_special_tokens, tokenizer.all_special_ids))
 data = sorted(tokens2ids, key=lambda x: x[-1])
 
 emotions_encoded = emotions.map(tokenize, batched=True, batch_size=None)
-print(emotions_encoded["train"].column_names)
+# print(emotions_encoded["train"].column_names)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -97,12 +103,15 @@ logging_steps = len(emotions_encoded["train"]) // batch_size
 
 training_args = TrainingArguments(
     output_dir="./checkpoints",
-    num_train_epochs=5,
+    num_train_epochs=1,
+    # load_best_model_at_end = True,
     per_device_train_batch_size=batch_size,
     per_device_eval_batch_size=batch_size,
     gradient_accumulation_steps=1,
     optim="paged_adamw_32bit",
     save_steps=500,
+    save_total_limit=2,
+    save_strategy = "epoch",
     logging_steps=logging_steps,
     learning_rate=2e-5,
     weight_decay=0.01,
@@ -127,7 +136,8 @@ trainer = Trainer(model=model, args=training_args,
                   train_dataset=emotions_encoded["train"],
                   eval_dataset=emotions_encoded["validation"],
                   tokenizer=tokenizer)
-trainer.train();
+trainer.train()
+# trainer.train(resume_from_checkpoint=True)
 wandb.finish()
 
 trainer.model.save_pretrained(new_model)
