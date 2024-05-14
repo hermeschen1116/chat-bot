@@ -6,6 +6,7 @@ from sklearn.metrics import f1_score, accuracy_score
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, Trainer, TrainingArguments
 from huggingface_hub import login
 from dotenv import load_dotenv
+from peft import LoraConfig, get_peft_model
 
 load_dotenv()
 login(token=os.environ.get("HF_TOKEN", ""), add_to_git_credential=True)
@@ -91,6 +92,16 @@ label2id = {
 
 model = AutoModelForSequenceClassification.from_pretrained(base_model, num_labels=num_labels, id2label=id2label, label2id=label2id)
 
+lora_config = LoraConfig(
+    lora_alpha=16,
+    lora_dropout=0.1,
+    r=8,
+    bias="none",
+    task_type="SEQ_CLS",
+    use_rslora = True
+)
+peft_model = get_peft_model(model, lora_config)
+
 def compute_metrics(pred):
     labels = pred.label_ids
     preds = pred.predictions.argmax(-1)
@@ -103,8 +114,8 @@ logging_steps = len(emotions_encoded["train"]) // batch_size
 
 training_args = TrainingArguments(
     output_dir="./checkpoints",
-    num_train_epochs=1,
-    # load_best_model_at_end = True,
+    num_train_epochs=20,
+    load_best_model_at_end = True,
     per_device_train_batch_size=batch_size,
     per_device_eval_batch_size=batch_size,
     gradient_accumulation_steps=1,
@@ -131,7 +142,7 @@ training_args = TrainingArguments(
 )
 wandb.config["trainer_arguments"] = training_args.to_dict()
 
-trainer = Trainer(model=model, args=training_args,
+trainer = Trainer(model=peft_model, args=training_args,
                   compute_metrics=compute_metrics,
                   train_dataset=emotions_encoded["train"],
                   eval_dataset=emotions_encoded["validation"],
