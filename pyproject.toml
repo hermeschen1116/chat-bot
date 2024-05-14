@@ -19,6 +19,8 @@ evaluate = "^0.4.1"
 torcheval = "^0.0.7"
 flash-attn = "^2.5.6"
 lightning = "^2.2.3"
+matplotlib = "^3.8.4"
+scikit-learn = "^1.4.2"
 
 [tool.poetry.group.dev.dependencies]
 python-dotenv = "^1.0.1"

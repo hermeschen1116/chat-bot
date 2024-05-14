@@ -19,7 +19,7 @@ def preprocessing(data):
     data = data.remove_columns("turn_type")
     return data
 
-def shifting_test(data):
+def shifting(data):
     df = data.to_pandas()
     df["label"] = df.groupby('dialog_id')["label"].shift(-1)
     df.dropna(inplace = True)
@@ -61,7 +61,7 @@ label2id = {
 data_name = "benjaminbeilharz/better_daily_dialog"
 data = load_dataset(data_name, split='test', num_proc=8)
 data = preprocessing(data)
-data = shifting_test(data)
+data = shifting(data)
 
 classifier_model = AutoModelForSequenceClassification.from_pretrained(new_model, num_labels=num_labels, id2label=id2label, label2id=label2id)
 classifier = pipeline("sentiment-analysis", model=classifier_model, tokenizer=tokenizer, device=0)

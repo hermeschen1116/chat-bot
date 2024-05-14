@@ -181,6 +181,7 @@ src/bot/sentiment_analysis/emotion_text_classifier_on_dd_v1/
 **/**/*.sh
 **/**/wandb/
 **/**/**/llama-2-7b-testing/
+**/**/**/test_model/
 **/**/archived/
 **/**/etc_on_dd/
 **/**/artifacts/
