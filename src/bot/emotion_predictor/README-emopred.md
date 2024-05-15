@@ -4,7 +4,8 @@
 ### HOW-TO
 `run_EP.ipynb` : 測試用筆記本，可略過
 `fine_tune.py` : 訓練用
-`inference.py` : 和未訓練模型比較 f1-score 和 acc
+`inference.py` : 和未訓練模型比較 f1-score 和 acc (on test dataset)
+`sweep.py` : 利用 `wandb sweep agent` 來找出最佳 hyperparameters
 
 ---
 ### 結果 5 epoches
