@@ -12,18 +12,6 @@ load_dotenv()
 login(token=os.environ.get("HF_TOKEN", ""), add_to_git_credential=True)
 wandb.login(key=os.environ.get("WANDB_API_KEY", ""))
 
-wandb_config = {
-    "base_model": "michellejieli/emotion_text_classifier",
-}
-wandb.init(
-    job_type="fine-tuning",
-    config=wandb_config,
-    project="emotion-chat-bot-ncu",
-    group="emotion_predictor_ex1",
-    mode="online",
-    # resume="auto"
-)
-
 base_model = "michellejieli/emotion_text_classifier"
 new_model = "./etc_on_dd"
 
