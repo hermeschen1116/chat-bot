@@ -38,14 +38,14 @@ def shift_labels(dataset):
     df["label"] = df.groupby('dialog_id')["label"].shift(-1)
     df.dropna(inplace = True)
     df["label"]  = df["label"].astype(int)
-    # print(df.head(20))
-    return dataset.from_pandas(df)
+    dataset = Dataset.from_pandas(df)
+    dataset = dataset.remove_columns("dialog_id")
+    return dataset
 
 def shift_all(data):
     data["train"] = shift_labels(data["train"])
     data["validation"] = shift_labels(data["validation"])
     data["test"] = shift_labels(data["test"])
-    
     return data
 
 data_name = "benjaminbeilharz/better_daily_dialog"
@@ -65,7 +65,7 @@ tokens2ids = list(zip(tokenizer.all_special_tokens, tokenizer.all_special_ids))
 data = sorted(tokens2ids, key=lambda x: x[-1])
 
 emotions_encoded = emotions.map(tokenize, batched=True, batch_size=None)
-# print(emotions_encoded["train"].column_names)
+emotions_encoded = emotions_encoded.remove_columns(['__index_level_0__'])
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
