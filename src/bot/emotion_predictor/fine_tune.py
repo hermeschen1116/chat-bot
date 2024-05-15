@@ -25,7 +25,7 @@ wandb.init(
 )
 
 base_model = "michellejieli/emotion_text_classifier"
-new_model = "etc_on_dd"
+new_model = "./etc_on_dd"
 
 def preprocessing(data):
     data = data.rename_column("utterance", "text")
@@ -114,7 +114,7 @@ logging_steps = len(emotions_encoded["train"]) // batch_size
 
 training_args = TrainingArguments(
     output_dir="./checkpoints",
-    num_train_epochs=20,
+    num_train_epochs=30,
     load_best_model_at_end = True,
     per_device_train_batch_size=batch_size,
     per_device_eval_batch_size=batch_size,
