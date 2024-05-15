@@ -20,3 +20,8 @@ Original:
 F1-score: 0.06338404956666807
 Accuracy: 0.10904392764857881
 ```
+
+### debug
+
+#### sent = self._sock.send(data) BrokenPipeError: [Errno 32] Broken pipe
+不小心 wandb.init 兩次 笑死
