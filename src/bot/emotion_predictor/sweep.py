@@ -38,14 +38,14 @@ def shift_labels(dataset):
     df["label"] = df.groupby('dialog_id')["label"].shift(-1)
     df.dropna(inplace = True)
     df["label"]  = df["label"].astype(int)
-    # print(df.head(20))
-    return dataset.from_pandas(df)
+    dataset = Dataset.from_pandas(df)
+    dataset = dataset.remove_columns("dialog_id")
+    return dataset
 
 def shift_all(data):
     data["train"] = shift_labels(data["train"])
     data["validation"] = shift_labels(data["validation"])
     data["test"] = shift_labels(data["test"])
-    
     return data
 
 data_name = "benjaminbeilharz/better_daily_dialog"
@@ -65,7 +65,7 @@ tokens2ids = list(zip(tokenizer.all_special_tokens, tokenizer.all_special_ids))
 data = sorted(tokens2ids, key=lambda x: x[-1])
 
 emotions_encoded = emotions.map(tokenize, batched=True, batch_size=None)
-# print(emotions_encoded["train"].column_names)
+emotions_encoded = emotions_encoded.remove_columns(['__index_level_0__'])
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -107,48 +107,84 @@ def compute_metrics(pred):
     preds = pred.predictions.argmax(-1)
     f1 = f1_score(labels, preds, average="weighted")
     acc = accuracy_score(labels, preds)
+    wandb.log({"eval_f1": f1})
     return {"accuracy": acc, "f1": f1}
 
-batch_size = 64
-logging_steps = len(emotions_encoded["train"]) // batch_size
+sweep_config = {
+    "method": "random",
+    "name": "disaster-sweep",
+    "metric": {
+        "goal": "maximize",
+        "name": "eval_f1"
+    },
+    "parameters": {
+        "epochs": {
+            "value": 5
+        },
+        "batch_size": {
+            "values": [8, 16, 32, 64]
+        },
+        "learning_rate": {
+            "values": [0.005, 0.0001, 0.00005]
+        },
+        "weight_decay": {
+            "values": [0.0001, 0.1]
+        },
+        "lora_r": {
+            "values": [8, 16, 64, 128, 256]
+        },
+        "lora_alpha": {
+            "values": [16, 32, 64]
+        },
+        "lora_dropout": {
+            "values": [0.0, 0.1, 0.2]
+        }
+    }
+}
 
-training_args = TrainingArguments(
-    output_dir="./checkpoints",
-    num_train_epochs=30,
-    load_best_model_at_end = True,
-    per_device_train_batch_size=batch_size,
-    per_device_eval_batch_size=batch_size,
-    gradient_accumulation_steps=1,
-    optim="paged_adamw_32bit",
-    save_steps=500,
-    save_total_limit=2,
-    save_strategy = "epoch",
-    logging_steps=logging_steps,
-    learning_rate=2e-5,
-    weight_decay=0.01,
-    fp16=False,
-    bf16=False,
-    max_grad_norm=0.3,
-    max_steps=-1,
-    warmup_ratio=0.03,
-    group_by_length=True,
-    lr_scheduler_type="constant",
-    report_to=["wandb"],
-    gradient_checkpointing=True,
-    gradient_checkpointing_kwargs={"use_reentrant": True},
-    evaluation_strategy="epoch",
-    log_level="error",
-    overwrite_output_dir=True
-)
-wandb.config["trainer_arguments"] = training_args.to_dict()
+def train(config=None):
+  with wandb.init(config=config):
+    config = wandb.config
+    
+    training_args = TrainingArguments(
+    output_dir="./sweeps",
+	  report_to='wandb', 
+        num_train_epochs=config.epochs,
+        learning_rate=config.learning_rate,
+        weight_decay=config.weight_decay,
+        per_device_train_batch_size=config.batch_size,
+        per_device_eval_batch_size=config.batch_size,
+        save_strategy='epoch',
+        evaluation_strategy='epoch',
+        logging_strategy='epoch',
+        load_best_model_at_end=True,
+        remove_unused_columns=False,
+        fp16=True,
+        gradient_checkpointing=True,
+        gradient_checkpointing_kwargs={"use_reentrant": True}
+    )
 
-trainer = Trainer(model=peft_model, args=training_args,
-                  compute_metrics=compute_metrics,
-                  train_dataset=emotions_encoded["train"],
-                  eval_dataset=emotions_encoded["validation"],
-                  tokenizer=tokenizer)
-trainer.train()
-# trainer.train(resume_from_checkpoint=True)
+    lora_config = LoraConfig(
+        r=config.lora_r,
+        lora_alpha=config.lora_alpha,
+        lora_dropout=config.lora_dropout,
+        bias="none",
+        task_type="SEQ_CLS",
+        use_rslora = True
+    )
+    
+    peft_model = get_peft_model(model, lora_config)
+
+    trainer = Trainer(
+        model=peft_model,
+        args=training_args,
+        train_dataset=emotions_encoded["train"],
+        eval_dataset=emotions_encoded["validation"],
+        compute_metrics=compute_metrics,
+    )
+    
+    trainer.train()
+
+sweep_id = wandb.sweep(sweep_config, project='emotion-predictor-sweeps')
+wandb.agent(sweep_id, train, count=100)
 wandb.finish()
-
-trainer.model.save_pretrained(new_model)
