@@ -181,8 +181,10 @@ bot/sentiment_analysis/emotion_text_classifier_on_dd_v1/
 **/**/llama-2-7b-testing/
 **/**/results_modified/
 **/**/archived/
+**/**/sweeps/
 etc_on_dd/
 **/**/*.sh
+**/**/*.whl
 **/**/wandb/
 <<<<<<< HEAD
 **/**/artifacts/
