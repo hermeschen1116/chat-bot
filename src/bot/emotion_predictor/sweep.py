@@ -13,7 +13,7 @@ login(token=os.environ.get("HF_TOKEN", ""), add_to_git_credential=True)
 wandb.login(key=os.environ.get("WANDB_API_KEY", ""))
 
 base_model = "michellejieli/emotion_text_classifier"
-new_model = "./etc_on_dd"
+# new_model = "./etc_on_dd"
 
 def preprocessing(data):
     data = data.rename_column("utterance", "text")
@@ -100,7 +100,7 @@ def compute_metrics(pred):
 
 sweep_config = {
     "method": "random",
-    "name": "disaster-sweep",
+    "name": "random-sweep",
     "metric": {
         "goal": "maximize",
         "name": "eval_f1"
