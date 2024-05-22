@@ -2,7 +2,24 @@
 中央大學專題
 
 ### HOW-TO
-執行 `run_SA.ipynb`
+`run_SA.ipynb` : 測試用筆記本，可略過
+`fine_tune.py` : 訓練用
+`inference.py` : 和未訓練模型比較 f1-score 和 acc (on test dataset)
+
+---
+### 結果 10 epoches
+
+```
+1h 15m 2s
+
+Fine-tuned:
+F1-score: 0.8237113168147658
+Accuracy: 0.8468992248062015
+
+Original:
+F1-score: 0.059981102643809625
+Accuracy: 0.10529715762273902
+```
 
 ### ISSUES
 1. **The model did not return a loss from the inputs, only the following keys: logits. For reference, the inputs it received are input_ids,attention_mask.**

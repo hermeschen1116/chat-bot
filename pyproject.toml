@@ -28,7 +28,6 @@ einops = "^0.8.0"
 
 [tool.poetry.group.cuda.dependencies]
 bitsandbytes = "^0.42.0"
-flash-attn = "^2.5.8"
 xformers = "^0.0.26.post1"
 
 [tool.poetry.group.dev.dependencies]

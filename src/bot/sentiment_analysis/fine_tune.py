@@ -34,25 +34,9 @@ def preprocessing(data):
     data = data.remove_columns(["dialog_id", "turn_type"])
     return data
 
-# def shift_labels(dataset):
-#     df = dataset.to_pandas()
-#     df["label"] = df.groupby('dialog_id')["label"].shift(-1)
-#     df.dropna(inplace = True)
-#     df["label"]  = df["label"].astype(int)
-#     dataset = Dataset.from_pandas(df)
-#     dataset = dataset.remove_columns("dialog_id")
-#     return dataset
-
-# def shift_all(data):
-#     data["train"] = shift_labels(data["train"])
-#     data["validation"] = shift_labels(data["validation"])
-#     data["test"] = shift_labels(data["test"])
-#     return data
-
 data_name = "benjaminbeilharz/better_daily_dialog"
 data_raw = load_dataset(data_name, num_proc=16)
 data_raw = preprocessing(data_raw)
-# data_raw = shift_all(data_raw)
 data = data_raw
 
 tokenizer = AutoTokenizer.from_pretrained(base_model)
@@ -66,7 +50,6 @@ tokens2ids = list(zip(tokenizer.all_special_tokens, tokenizer.all_special_ids))
 data = sorted(tokens2ids, key=lambda x: x[-1])
 
 emotions_encoded = emotions.map(tokenize, batched=True, batch_size=None)
-# emotions_encoded = emotions_encoded.remove_columns(['__index_level_0__'])
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
