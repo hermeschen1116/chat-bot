@@ -186,8 +186,6 @@ etc_on_dd/
 **/**/*.sh
 **/**/*.whl
 **/**/wandb/
-<<<<<<< HEAD
 **/**/artifacts/
-=======
+**/**/SA-v2/
 etc_on_dd/
->>>>>>> 52d5289 (remove test)
