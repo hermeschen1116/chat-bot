@@ -7,6 +7,7 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification, Trai
 from huggingface_hub import login
 from dotenv import load_dotenv
 from peft import LoraConfig, get_peft_model
+import random
 
 load_dotenv()
 login(token=os.environ.get("HF_TOKEN", ""), add_to_git_credential=True)
@@ -34,9 +35,19 @@ def preprocessing(data):
     data = data.remove_columns(["dialog_id", "turn_type"])
     return data
 
+def remove_half_train(data):
+    data_set = data["train"]
+    label_0_indices = [i for i, row in enumerate(data_set) if row['label'] == 0]
+    num_to_remove = len(label_0_indices) // 2
+    indices_to_remove = random.sample(label_0_indices, num_to_remove)
+    filtered_data = data_set.filter(lambda x, i: i not in indices_to_remove, with_indices=True)
+    data["train"] = filtered_data
+    return data
+
 data_name = "benjaminbeilharz/better_daily_dialog"
 data_raw = load_dataset(data_name, num_proc=16)
 data_raw = preprocessing(data_raw)
+data_raw = remove_half_train(data_raw)
 data = data_raw
 
 tokenizer = AutoTokenizer.from_pretrained(base_model)
