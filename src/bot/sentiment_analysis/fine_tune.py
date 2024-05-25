@@ -23,11 +23,13 @@ wandb.init(
     project="sentiment-analysis",
     group="sentiment-analysis",
     mode="online",
+    tags=["SA", "0.5train"],
+    # name="sentiment-analysis-rslora_HalfTrainData"
     # resume="auto"
 )
 
 base_model = "michellejieli/emotion_text_classifier"
-new_model = "SA-v2"
+new_model = "SA-v2-half-neutral-data"
 
 def preprocessing(data):
     data = data.rename_column("utterance", "text")
@@ -49,6 +51,8 @@ data_raw = load_dataset(data_name, num_proc=16)
 data_raw = preprocessing(data_raw)
 data_raw = remove_half_train(data_raw)
 data = data_raw
+traindata_size = len(data["train"])
+wandb.log({"dataset_size": traindata_size})
 
 tokenizer = AutoTokenizer.from_pretrained(base_model)
 
