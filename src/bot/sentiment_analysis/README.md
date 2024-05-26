@@ -7,23 +7,59 @@
 `inference.py` : 和未訓練模型比較 f1-score 和 acc (on test dataset)
 
 ---
-### 結果 10 epoches
+### 結果
 
+Time spent: `55m 2s`
 ```
-55m 2s
+Fine-tuned: (full dataset 10 epoches)
+              precision    recall  f1-score   support
 
-Fine-tuned:
-F1-score: 0.8251033037101377
-Accuracy: 0.8303617571059432
+     neutral     0.8958    0.9089    0.9023      6321
+       anger     0.2642    0.1186    0.1637       118
+     disgust     0.2105    0.0851    0.1212        47
+        fear     0.1111    0.0588    0.0769        17
+   happiness     0.5731    0.5770    0.5751      1019
+     sadness     0.3158    0.1765    0.2264       102
+    surprise     0.3497    0.4914    0.4086       116
 
-Fine-tuned-half:
-F1-score: 0.8203643697401379
-Accuracy: 0.829328165374677
+    accuracy                         0.8304      7740
+   macro avg     0.3886    0.3452    0.3535      7740
+weighted avg     0.8220    0.8304    0.8251      7740
+```
+```
+Fine-tuned-half: (half neutral dataset 5 epoches)
+              precision    recall  f1-score   support
 
+     neutral     0.8967    0.9073    0.9019      6321
+       anger     0.2963    0.1356    0.1860       118
+     disgust     0.0833    0.0213    0.0339        47
+        fear     0.1250    0.0588    0.0800        17
+   happiness     0.5598    0.5829    0.5712      1019
+     sadness     0.3469    0.1667    0.2252       102
+    surprise     0.3375    0.4655    0.3913       116
+
+    accuracy                         0.8292      7740
+   macro avg     0.3779    0.3340    0.3414      7740
+weighted avg     0.8209    0.8292    0.8238      7740
+```
+```
 Original:
-F1-score: 0.7794121109785516
-Accuracy: 0.7652454780361757
-true: [0, 6, 0, 0, 0, 0, 0, 0, 0, 0] 
+              precision    recall  f1-score   support
+
+     neutral     0.8784    0.8526    0.8653      6321
+       anger     0.2124    0.3475    0.2637       118
+     disgust     0.1494    0.2766    0.1940        47
+        fear     0.0621    0.5294    0.1111        17
+   happiness     0.6045    0.3690    0.4583      1019
+     sadness     0.1349    0.3824    0.1995       102
+    surprise     0.2082    0.4828    0.2909       116
+
+    accuracy                         0.7652      7740
+   macro avg     0.3214    0.4629    0.3404      7740
+weighted avg     0.8061    0.7652    0.7794      7740
+```
+```
+true: [0, 6, 0, 0, 0, 0, 0, 0, 0] 
 fine-tuned: [0, 0, 0, 0, 0, 0, 1, 6, 0] 
 fine-tuned-half: [0, 0, 0, 0, 0, 0, 1, 6, 0] 
 original: [0, 0, 0, 0, 0, 0, 1, 6, 1]
