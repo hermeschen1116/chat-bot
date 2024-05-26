@@ -10,15 +10,23 @@
 ### 結果 10 epoches
 
 ```
-1h 15m 2s
+55m 2s
 
 Fine-tuned:
-F1-score: 0.8237113168147658
-Accuracy: 0.8468992248062015
+F1-score: 0.8251033037101377
+Accuracy: 0.8303617571059432
+
+Fine-tuned-half:
+F1-score: 0.8203643697401379
+Accuracy: 0.829328165374677
 
 Original:
 F1-score: 0.7794121109785516
 Accuracy: 0.7652454780361757
+true: [0, 6, 0, 0, 0, 0, 0, 0, 0, 0] 
+fine-tuned: [0, 0, 0, 0, 0, 0, 1, 6, 0] 
+fine-tuned-half: [0, 0, 0, 0, 0, 0, 1, 6, 0] 
+original: [0, 0, 0, 0, 0, 0, 1, 6, 1]
 ```
 
 ### ISSUES
