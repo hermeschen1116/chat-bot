@@ -23,7 +23,7 @@ wandb.init(
     project="sentiment-analysis",
     group="sentiment-analysis",
     mode="online",
-    tags=["SA", "0.5train"],
+    tags=["SA", "0.5train", "5epoches"],
     # name="sentiment-analysis-rslora_HalfTrainData"
     # resume="auto"
 )
@@ -113,7 +113,7 @@ logging_steps = len(emotions_encoded["train"]) // batch_size
 
 training_args = TrainingArguments(
     output_dir="./checkpoints",
-    num_train_epochs=10,
+    num_train_epochs=5,
     load_best_model_at_end = True,
     per_device_train_batch_size=batch_size,
     per_device_eval_batch_size=batch_size,
