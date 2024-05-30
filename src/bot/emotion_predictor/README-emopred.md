@@ -8,20 +8,44 @@
 `sweep.py` : 利用 `wandb sweep agent` 來找出最佳 hyperparameters
 
 ---
-### 結果 5 epoches
-
+### 結果
 ```
-1h 45m 57s
+Fine-tuned: (10 epoches)
+              precision    recall  f1-score   support
 
-Fine-tuned:
-F1-score: 0.7955796269870956
-Accuracy: 0.8073643410852713
+     neutral     0.8159    0.9903    0.8946      5454
+       anger     0.0000    0.0000    0.0000       102
+     disgust     0.0000    0.0000    0.0000        41
+        fear     0.0000    0.0000    0.0000        14
+   happiness     0.5299    0.0669    0.1188       927
+     sadness     0.0000    0.0000    0.0000        94
+    surprise     0.0000    0.0000    0.0000       108
 
+    accuracy                         0.8105      6740
+   macro avg     0.1923    0.1510    0.1448      6740
+weighted avg     0.7331    0.8105    0.7403      6740
+```
+```
 Original:
-F1-score: 0.06338404956666807
-Accuracy: 0.10904392764857881
-```
+              precision    recall  f1-score   support
 
+     neutral     0.8290    0.8188    0.8239      5454
+       anger     0.0970    0.1569    0.1199       102
+     disgust     0.0548    0.0976    0.0702        41
+        fear     0.0000    0.0000    0.0000        14
+   happiness     0.3987    0.2060    0.2717       927
+     sadness     0.0354    0.0957    0.0517        94
+    surprise     0.0079    0.0185    0.0111       108
+
+    accuracy                         0.6955      6740
+   macro avg     0.2033    0.1991    0.1926      6740
+weighted avg     0.7281    0.6955    0.7072      6740
+```
+```
+true: [6, 0, 0, 0, 0, 0, 0, 0, 0] 
+fine-tuned: [0, 0, 0, 0, 0, 0, 0, 0, 0] 
+original: [0, 0, 0, 0, 0, 0, 1, 6, 1]
+```
 ### debug
 
 #### sent = self._sock.send(data) BrokenPipeError: [Errno 32] Broken pipe
