@@ -44,6 +44,22 @@ Fine-tuned-half: (half neutral dataset 5 epoches)
 weighted avg     0.8209    0.8292    0.8238      7740
 ```
 ```
+Fine-tuned-half: (optimized parameters)
+              precision    recall  f1-score   support
+
+     neutral     0.8887    0.9256    0.9068      6321
+       anger     0.3333    0.1102    0.1656       118
+     disgust     0.2667    0.0851    0.1290        47
+        fear     0.2222    0.2353    0.2286        17
+   happiness     0.6007    0.5358    0.5664      1019
+     sadness     0.2759    0.2353    0.2540       102
+    surprise     0.5114    0.3879    0.4412       116
+
+    accuracy                         0.8381      7740
+   macro avg     0.4427    0.3593    0.3845      7740
+weighted avg     0.8233    0.8381    0.8289      7740
+```
+```
 Original:
               precision    recall  f1-score   support
 

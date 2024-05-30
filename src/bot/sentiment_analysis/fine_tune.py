@@ -92,9 +92,9 @@ label2id = {
 model = AutoModelForSequenceClassification.from_pretrained(base_model, num_labels=num_labels, id2label=id2label, label2id=label2id)
 
 lora_config = LoraConfig(
-    lora_alpha=32,
+    lora_alpha=64,
     lora_dropout=0.2,
-    r=256,
+    r=128,
     bias="none",
     task_type="SEQ_CLS",
     use_rslora = True
@@ -108,7 +108,7 @@ def compute_metrics(pred):
     acc = accuracy_score(labels, preds)
     return {"accuracy": acc, "f1": f1}
 
-batch_size = 16
+batch_size = 8
 logging_steps = len(emotions_encoded["train"]) // batch_size
 
 training_args = TrainingArguments(
@@ -123,8 +123,8 @@ training_args = TrainingArguments(
     save_total_limit=2,
     save_strategy = "epoch",
     logging_steps=logging_steps,
-    learning_rate=2e-5,
-    weight_decay=0.01,
+    learning_rate=0.0001,
+    weight_decay=0.1,
     fp16=False,
     bf16=False,
     max_grad_norm=0.3,
