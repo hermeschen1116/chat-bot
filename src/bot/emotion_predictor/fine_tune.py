@@ -1,6 +1,9 @@
 import os
+import random
+
 import torch
 import wandb
+
 from datasets import load_dataset, Dataset
 from sklearn.metrics import f1_score, accuracy_score
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, Trainer, TrainingArguments
@@ -18,14 +21,14 @@ wandb_config = {
 wandb.init(
     job_type="fine-tuning",
     config=wandb_config,
-    project="emotion-chat-bot-ncu",
+    project="emotion-chat-bot-ncu-half-neutral-data",
     group="emotion_predictor_ex1",
     mode="online",
     # resume="auto"
 )
 
 base_model = "michellejieli/emotion_text_classifier"
-new_model = "./etc_on_dd"
+new_model = "./etc_on_dd-half_neutral"
 
 def preprocessing(data):
     data = data.rename_column("utterance", "text")
@@ -42,6 +45,15 @@ def shift_labels(dataset):
     dataset = dataset.remove_columns("dialog_id")
     return dataset
 
+def remove_half_train(data):
+    data_set = data["train"]
+    label_0_indices = [i for i, row in enumerate(data_set) if row['label'] == 0]
+    num_to_remove = len(label_0_indices) // 2
+    indices_to_remove = random.sample(label_0_indices, num_to_remove)
+    filtered_data = data_set.filter(lambda x, i: i not in indices_to_remove, with_indices=True)
+    data["train"] = filtered_data
+    return data
+
 def shift_all(data):
     data["train"] = shift_labels(data["train"])
     data["validation"] = shift_labels(data["validation"])
@@ -52,7 +64,10 @@ data_name = "benjaminbeilharz/better_daily_dialog"
 data_raw = load_dataset(data_name, num_proc=16)
 data_raw = preprocessing(data_raw)
 data_raw = shift_all(data_raw)
+data_raw = remove_half_train(data_raw)
 data = data_raw
+
+# print(data[0:10])
 
 tokenizer = AutoTokenizer.from_pretrained(base_model)
 
@@ -93,9 +108,9 @@ label2id = {
 model = AutoModelForSequenceClassification.from_pretrained(base_model, num_labels=num_labels, id2label=id2label, label2id=label2id)
 
 lora_config = LoraConfig(
-    lora_alpha=16,
-    lora_dropout=0.1,
-    r=8,
+    lora_alpha=64,
+    lora_dropout=0.2,
+    r=128,
     bias="none",
     task_type="SEQ_CLS",
     use_rslora = True
@@ -109,12 +124,12 @@ def compute_metrics(pred):
     acc = accuracy_score(labels, preds)
     return {"accuracy": acc, "f1": f1}
 
-batch_size = 64
+batch_size = 8
 logging_steps = len(emotions_encoded["train"]) // batch_size
 
 training_args = TrainingArguments(
     output_dir="./checkpoints",
-    num_train_epochs=30,
+    num_train_epochs=5,
     load_best_model_at_end = True,
     per_device_train_batch_size=batch_size,
     per_device_eval_batch_size=batch_size,
@@ -124,8 +139,8 @@ training_args = TrainingArguments(
     save_total_limit=2,
     save_strategy = "epoch",
     logging_steps=logging_steps,
-    learning_rate=2e-5,
-    weight_decay=0.01,
+    learning_rate=0.0001,
+    weight_decay=0.1,
     fp16=False,
     bf16=False,
     max_grad_norm=0.3,
