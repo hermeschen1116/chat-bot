@@ -2,10 +2,10 @@
 中央大學專題
 
 ### HOW-TO
-`run_EP.ipynb` : 測試用筆記本，可略過
-`fine_tune.py` : 訓練用
-`inference.py` : 和未訓練模型比較 f1-score 和 acc (on test dataset)
-`sweep.py` : 利用 `wandb sweep agent` 來找出最佳 hyperparameters
+- `run_EP.ipynb` : 測試用筆記本，可略過
+- `fine_tune.py` : 訓練用
+- `inference.py` : 和未訓練模型比較 f1-score 和 acc (on test dataset)
+- `sweep.py` : 利用 `wandb sweep agent` 來找出最佳 hyperparameters
 
 ---
 ### 結果
@@ -26,6 +26,22 @@ Fine-tuned: (10 epoches)
 weighted avg     0.7331    0.8105    0.7403      6740
 ```
 ```
+Fine-tuned: (5 epoches hal neutral data)
+              precision    recall  f1-score   support
+
+     neutral     0.8286    0.9556    0.8876      5454
+       anger     0.6000    0.0294    0.0561       102
+     disgust     0.0000    0.0000    0.0000        41
+        fear     0.0000    0.0000    0.0000        14
+   happiness     0.4244    0.2028    0.2745       927
+     sadness     0.0000    0.0000    0.0000        94
+    surprise     0.0000    0.0000    0.0000       108
+
+    accuracy                         0.8016      6740
+   macro avg     0.2647    0.1697    0.1740      6740
+weighted avg     0.7380    0.8016    0.7568      6740
+```
+```
 Original:
               precision    recall  f1-score   support
 
@@ -44,6 +60,7 @@ weighted avg     0.7281    0.6955    0.7072      6740
 ```
 true: [6, 0, 0, 0, 0, 0, 0, 0, 0] 
 fine-tuned: [0, 0, 0, 0, 0, 0, 0, 0, 0] 
+fine-tuned-half: [0, 0, 0, 0, 0, 0, 1, 0, 4] 
 original: [0, 0, 0, 0, 0, 0, 1, 6, 1]
 ```
 ### debug

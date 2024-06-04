@@ -1,6 +1,6 @@
+import os
 import torch
 from datasets import load_dataset, Dataset
-import os
 from sklearn.metrics import f1_score, accuracy_score
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
 from dotenv import load_dotenv
@@ -9,7 +9,7 @@ from sklearn.metrics import classification_report, confusion_matrix
 load_dotenv()
 
 new_model = "/home/user/github/etc_on_dd-1"
-# new_model_half = "/home/user/github/SA-v2-half-neutral-data"
+new_model_half = "/home/user/github/etc_on_dd-half_neutral"
 base_model = "michellejieli/emotion_text_classifier"
 tokenizer = AutoTokenizer.from_pretrained(base_model)
 
@@ -99,11 +99,11 @@ predictions = data.map(lambda row: predict(row, classifier, label2id))
 print("Fine-tuned:")
 ft_10, f1_ft, accuracy_ft = evaluate(predictions)
 
-# # half dataset 5 epoches
-# classifier = create_classifier_pipeline(new_model_half, num_labels, id2label, label2id, tokenizer)
-# predictions = data.map(lambda row: predict(row, classifier, label2id))
-# print("\nFine-tuned-half:")
-# ft_half_10, f1_ft_half, accuracy_ft_half = evaluate(predictions)
+# half dataset 5 epoches
+classifier = create_classifier_pipeline(new_model_half, num_labels, id2label, label2id, tokenizer)
+predictions = data.map(lambda row: predict(row, classifier, label2id))
+print("\nFine-tuned-half:")
+ft_half_10, f1_ft_half, accuracy_ft_half = evaluate(predictions)
 
 # untrained
 classifier_model = AutoModelForSequenceClassification.from_pretrained(base_model)
@@ -112,5 +112,5 @@ predictions = data.map(lambda row: predict(row, classifier, og_label2id))
 print("\nOriginal:")
 og_10, f1, accuracy = evaluate(predictions)
 
-# print("\ntrue:", data[0:9]['label'], "\nfine-tuned:", ft_10, "\nfine-tuned-half:", ft_half_10, "\noriginal:", og_10)
-print("\ntrue:", data[0:9]['label'], "\nfine-tuned:", ft_10, "\noriginal:", og_10)
+print("\ntrue:", data[0:9]['label'], "\nfine-tuned:", ft_10, "\nfine-tuned-half:", ft_half_10, "\noriginal:", og_10)
+# print("\ntrue:", data[0:9]['label'], "\nfine-tuned:", ft_10, "\noriginal:", og_10)
