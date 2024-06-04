@@ -26,7 +26,7 @@ Fine-tuned: (10 epoches)
 weighted avg     0.7331    0.8105    0.7403      6740
 ```
 ```
-Fine-tuned: (5 epoches hal neutral data)
+Fine-tuned: (5 epoches half neutral data)
               precision    recall  f1-score   support
 
      neutral     0.8286    0.9556    0.8876      5454
