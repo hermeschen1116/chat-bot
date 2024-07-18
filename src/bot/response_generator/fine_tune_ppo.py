@@ -151,7 +151,9 @@ sentiment_analysis_model = torch.compile(analyser.model)
 
 
 def emotion_reward(response: str, emotion: str) -> float:
-    emotion_score = analyser(response)
+    emotion_score = analyser(response)[0]
+    print(emotion_score)
+    print(emotion)
 
     if emotion_score["label"] == emotion:
         return emotion_score["score"] * 10
@@ -173,12 +175,13 @@ def length_reward(response_length: int) -> float:
 
 
 def reward(batch: dict) -> list:
-    emotion_reward_scores = [emotion_reward(response, emotion) for response, emotion in zip(batch["response"], batch["label"])]
+    emotion_reward_scores = [emotion_reward(response, emotion_labels[emotion]) for response, emotion in zip(batch["response"], batch["label"])]
     length_reward_scores = [length_reward(response_length) for response_length in batch["response_length"]]
 
     reward_weights = tensor(wandb.config["reward_weights"])
     reward_bias = tensor(wandb.config["reward_bias"])
     return [tensor(reward) * reward_weights + reward_bias for reward in zip(emotion_reward_scores, length_reward_scores)]
+
 
 ppo_config = PPOConfig(
 	gradient_accumulation_steps=1,
