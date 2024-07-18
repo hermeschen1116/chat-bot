@@ -2,21 +2,16 @@ from argparse import ArgumentParser
 from dataclasses import dataclass, Field
 
 import torch
-from torch import tensor
-from trl.core import LengthSampler
 import wandb
 from bitsandbytes.optim import PagedLion32bit
 from datasets import load_dataset
 from peft.peft_model import PeftModel
+from torch import tensor
 from tqdm.auto import tqdm
-from transformers import (
-	BitsAndBytesConfig,
-	GenerationConfig,
-	HfArgumentParser,
-	pipeline, TextStreamer
-)
+from transformers import (BitsAndBytesConfig, GenerationConfig, HfArgumentParser, pipeline, TextStreamer)
 from transformers.hf_argparser import HfArg
 from trl import AutoModelForCausalLMWithValueHead, PPOConfig, PPOTrainer
+from trl.core import LengthSampler
 from unsloth import FastLanguageModel
 
 from libs import CommonScriptArguments, CommonWanDBArguments
@@ -66,8 +61,8 @@ dataset = dataset.filter(lambda sample: len(sample) >= (2 + history_length), inp
 print(f"Dataset size after filter: {len(dataset)}")
 
 dataset = dataset.map(lambda sample: {
-	"prompt": sample[i: i + 2 + history_length]
-	for i in range(0, len(sample) - 2, 2) if (i + 2 + history_length) <= len(sample)
+	"prompt": sample[i: i + 2 + history_length] for i in range(0, len(sample) - 2, 2)
+			  if (i + 2 + history_length) <= len(sample)
 }, input_columns="prompt", num_proc=16)
 
 system_prompt: list = [{"role": "system", "content": {"emotion": "", "dialog": wandb.config["system_prompt"]}}]
@@ -79,10 +74,9 @@ dataset = dataset.map(lambda samples: {
 emotion_labels: list = ["neutral", "anger", "disgust", "fear", "happiness", "sadness", "surprise"]
 
 dataset = dataset.map(lambda samples: {
-	"query": [
-		sample[:-1] + [{"role": "assistant", "content": {"emotion": sample[-1]["content"]["emotion"], "dialog": ""}}]
-		for sample in samples
-	],
+	"query": [sample[:-1] +
+			  [{"role": "assistant", "content": {"emotion": sample[-1]["content"]["emotion"], "dialog": ""}}]
+	          for sample in samples],
 	"label": [sample[-1]["content"]["emotion"] for sample in samples]
 }, input_columns="prompt", remove_columns="prompt", batched=True, num_proc=16)
 
@@ -95,7 +89,7 @@ base_model, tokenizer = FastLanguageModel.from_pretrained(
 	use_cache=False,
 	device_map="auto",
 	use_gradient_checkpointing=True,
-	low_cpu_mem_usage=True,
+	low_cpu_mem_usage=True
 )
 tokenizer.padding_side = "left"
 tokenizer.clean_up_tokenization_spaces = True
@@ -107,27 +101,22 @@ base_model_with_adapter = PeftModel.from_pretrained(base_model, wandb.config["ad
 base_model_with_adapter.print_trainable_parameters()
 FastLanguageModel.for_inference(base_model_with_adapter)
 
-ppo_model = AutoModelForCausalLMWithValueHead.from_pretrained(
-	base_model_with_adapter,
-	device_map="auto"
-)
+ppo_model = AutoModelForCausalLMWithValueHead.from_pretrained(base_model_with_adapter, device_map="auto")
 
 dataset = dataset.with_format("torch")
 dataset = dataset.map(lambda sample: {
-	"input_ids": tokenizer.apply_chat_template(
-		sample,
-		tokenize=True,
-		padding="max_length",
-		max_length=wandb.config["max_input_tokens"],
-		add_generation_prompt=True,
-		return_tensors="pt"
-	)
+	"input_ids": tokenizer.apply_chat_template(sample,
+	                                           tokenize=True,
+	                                           padding="max_length",
+	                                           max_length=wandb.config["max_input_tokens"],
+	                                           add_generation_prompt=True,
+	                                           return_tensors="pt")
 }, input_columns="query", num_proc=16)
 
 # Sentiment Analysis
 analyser = pipeline(
 	model=wandb.config["sentiment_analysis_model"],
- 	tokenizer=wandb.config["sentiment_analysis_model"],
+	tokenizer=wandb.config["sentiment_analysis_model"],
 	max_length=512,
 	truncation=True,
 	framework="pt",
@@ -151,14 +140,18 @@ sentiment_analysis_model = torch.compile(analyser.model)
 
 
 def emotion_reward(response: str, emotion: str) -> float:
+<<<<<<< HEAD
     emotion_score = analyser(response)[0]
     print(emotion_score)
     print(emotion)
+=======
+	emotion_score = analyser(response)[0]
+>>>>>>> main
 
-    if emotion_score["label"] == emotion:
-        return emotion_score["score"] * 10
-    else:
-        return emotion_score["score"] - 1
+	if emotion_score["label"] == emotion:
+		return emotion_score["score"] * 10
+	else:
+		return emotion_score["score"] - 1
 
 
 # [TODO] 用級距的方式來給予分數
@@ -168,19 +161,27 @@ def length_reward(response_length: int) -> float:
 
 	if difference_ratio_min < 1:
 		return difference_ratio_min * 0.0001
-	elif difference_ratio_min > 1 and difference_ratio_max < 1:
+	elif difference_ratio_min > 1 > difference_ratio_max:
 		return (difference_ratio_min + difference_ratio_max) * 10
 	elif difference_ratio_max > 1:
 		return difference_ratio_max * 0.9
 
 
 def reward(batch: dict) -> list:
+<<<<<<< HEAD
     emotion_reward_scores = [emotion_reward(response, emotion_labels[emotion]) for response, emotion in zip(batch["response"], batch["label"])]
     length_reward_scores = [length_reward(response_length) for response_length in batch["response_length"]]
+=======
+	emotion_reward_scores = [emotion_reward(response, emotion) for response, emotion in
+	                         zip(batch["response"], batch["label"])]
+	length_reward_scores = [length_reward(response_length) for response_length in batch["response_length"]]
 
-    reward_weights = tensor(wandb.config["reward_weights"])
-    reward_bias = tensor(wandb.config["reward_bias"])
-    return [tensor(reward) * reward_weights + reward_bias for reward in zip(emotion_reward_scores, length_reward_scores)]
+	reward_weights = tensor(wandb.config["reward_weights"])
+	reward_bias = tensor(wandb.config["reward_bias"])
+	return [tensor(reward) * reward_weights + reward_bias for reward in
+	        zip(emotion_reward_scores, length_reward_scores)]
+>>>>>>> main
+
 
 
 ppo_config = PPOConfig(
@@ -203,7 +204,7 @@ length_sampler = LengthSampler(wandb.config["min_new_tokens"], wandb.config["max
 
 streamer = TextStreamer(
 	tokenizer,
-	skip_special_tokens=True, # show <pad> or not
+	skip_special_tokens=True,  # show <pad> or not
 	clean_up_tokenization_spaces=True
 )
 
@@ -238,7 +239,7 @@ for epoch in range(wandb.config["num_epoches"]):
 		response_tensors = tuner.generate(
 			query_tensors,
 			return_prompt=False,
-			batch_size=1,   # must set to 1 if using streamer
+			batch_size=1, # must set to 1 if using streamer
 			streamer=streamer,  # use streamer to show the generation process
 			length_sampler=length_sampler,
 			**generation_config.to_dict()
