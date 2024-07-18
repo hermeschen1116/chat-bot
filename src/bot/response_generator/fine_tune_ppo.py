@@ -54,11 +54,11 @@ dataset = load_dataset(
 	num_proc=16,
 	trust_remote_code=True
 )
-# dataset = dataset.take(2048)   # use very small dataset to debug
 
 history_length: int = 2 * wandb.config["num_turns_history"]
 dataset = dataset.filter(lambda sample: len(sample) >= (2 + history_length), input_columns="prompt", num_proc=16)
 print(f"Dataset size after filter: {len(dataset)}")
+# dataset = dataset.take(128)   # use very small dataset to debug
 
 dataset = dataset.map(lambda sample: {
 	"prompt": sample[i: i + 2 + history_length] for i in range(0, len(sample) - 2, 2)
@@ -114,11 +114,10 @@ dataset = dataset.map(lambda sample: {
 }, input_columns="query", num_proc=16)
 
 # Sentiment Analysis
-analyser = pipeline(
+sentiment_analyser = pipeline(
 	model=wandb.config["sentiment_analysis_model"],
 	tokenizer=wandb.config["sentiment_analysis_model"],
 	max_length=512,
-	truncation=True,
 	framework="pt",
 	task="sentiment-analysis",
 	num_workers=16,
@@ -136,16 +135,46 @@ analyser = pipeline(
 	trust_remote_code=True
 )
 
-sentiment_analysis_model = torch.compile(analyser.model)
+# Detect gibberish
+gibberish_analyser = pipeline(
+	model=wandb.config["gibberish_detector_model"],
+	tokenizer=wandb.config["gibberish_detector_model"],
+	max_length=512,
+	framework="pt",
+	task="text-classification",
+	num_workers=16,
+	device_map="cuda",
+	torch_dtype="auto",
+	model_kwargs={
+		"quantization_config": BitsAndBytesConfig(
+			load_in_4bit=True,
+			bnb_4bit_compute_dtype=torch.float16
+		),
+		"low_cpu_mem_usage": True
+	},
+	trust_remote_code=True
+)
 
 
 def emotion_reward(response: str, emotion: str) -> float:
-	emotion_score = analyser(response)[0]
+	score = sentiment_analyser(response)[0]
 
-	if emotion_score["label"] == emotion:
-		return emotion_score["score"] * 10
+	if score["label"] == emotion:
+		return score["score"] * 10
 	else:
-		return emotion_score["score"] - 1
+		return score["score"] - 1
+
+
+def non_gibberish_reward(response: str) -> float:
+	score = gibberish_analyser(response)[0]
+
+	match score["label"]:
+		case "clean":
+			return score["score"] * 10
+		case "mild gibberish":
+			return score["score"] * 0.9
+		case _:
+			return score["score"] - 1
 
 
 # [TODO] 用級距的方式來給予分數
@@ -153,23 +182,24 @@ def length_reward(response_length: int) -> float:
 	difference_ratio_min = (response_length - wandb.config["min_new_tokens"]) / wandb.config["min_new_tokens"]
 	difference_ratio_max = (response_length - wandb.config["max_new_tokens"]) / wandb.config["max_new_tokens"]
 
-	if difference_ratio_min < 1:
+	if abs(difference_ratio_min) < 1:
 		return difference_ratio_min * 0.0001
-	elif difference_ratio_min > 1 > difference_ratio_max:
-		return (difference_ratio_min + difference_ratio_max) * 10
-	elif difference_ratio_max > 1:
+	elif abs(difference_ratio_min) > 1 > abs(difference_ratio_max):
+		return abs(difference_ratio_min + difference_ratio_max) * 10
+	else:
 		return difference_ratio_max * 0.9
 
 
 def reward(batch: dict) -> list:
-	emotion_reward_scores = [emotion_reward(response, emotion) for response, emotion in
-	                         zip(batch["response"], batch["label"])]
-	length_reward_scores = [length_reward(response_length) for response_length in batch["response_length"]]
+	emotion_scores = [emotion_reward(response, emotion)
+	                  for response, emotion in zip(batch["response"], batch["label"])]
+	length_scores = [length_reward(response_length) for response_length in batch["response_length"]]
+	gibberish_scores = [non_gibberish_reward(response) for response in batch["response"]]
 
-	reward_weights = tensor(wandb.config["reward_weights"])
-	reward_bias = tensor(wandb.config["reward_bias"])
-	return [tensor(reward) * reward_weights + reward_bias for reward in
-	        zip(emotion_reward_scores, length_reward_scores)]
+	reward_weight = tensor(wandb.config["reward_weights"], dtype=torch.float)
+	reward_bias = tensor(wandb.config["reward_bias"], dtype=torch.float)
+	return [reward_weight.dot(tensor(reward_score, dtype=torch.float)) + reward_bias
+	        for reward_score in zip(emotion_scores, length_scores, gibberish_scores)]
 
 
 
